@@ -1,9 +1,9 @@
-const mercadopago = require('mercadopago');
+const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
 const prisma = require('../config/database');
 
-// Configurar Mercado Pago
-mercadopago.configure({
-  access_token: process.env.MERCADOPAGO_ACCESS_TOKEN,
+// Configurar cliente do Mercado Pago
+const client = new MercadoPagoConfig({
+  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
 });
 
 // Criar preferência de pagamento para vaga única
@@ -31,7 +31,8 @@ exports.createJobPaymentPreference = async (req, res) => {
     }
 
     // Criar preferência no Mercado Pago
-    const preference = {
+    const preference = new Preference(client);
+    const preferenceData = {
       items: [
         {
           title: `Publicação de vaga: ${job.title}`,
@@ -46,10 +47,10 @@ exports.createJobPaymentPreference = async (req, res) => {
       },
       auto_return: 'approved',
       external_reference: jobId,
-      notification_url: `${process.env.BACKEND_URL || 'https://jobconnect-api.onrender.com'}/api/payments/webhook`,
+      notification_url: `${process.env.BACKEND_URL || 'https://jobconnect-i16a.onrender.com'}/api/payments/webhook`,
     };
 
-    const response = await mercadopago.preferences.create(preference);
+    const response = await preference.create({ body: preferenceData });
 
     // Criar registro de pagamento
     await prisma.payment.create({
@@ -63,8 +64,8 @@ exports.createJobPaymentPreference = async (req, res) => {
     });
 
     res.json({
-      preferenceId: response.body.id,
-      initPoint: response.body.init_point,
+      preferenceId: response.id,
+      initPoint: response.init_point,
     });
   } catch (error) {
     console.error('Erro ao criar preferência de pagamento:', error);
@@ -86,7 +87,8 @@ exports.createSubscriptionPreference = async (req, res) => {
     }
 
     // Criar preferência de assinatura
-    const preference = {
+    const preference = new Preference(client);
+    const preferenceData = {
       items: [
         {
           title: 'Plano PRO - JobConnect',
@@ -101,10 +103,10 @@ exports.createSubscriptionPreference = async (req, res) => {
       },
       auto_return: 'approved',
       external_reference: companyId,
-      notification_url: `${process.env.BACKEND_URL || 'https://jobconnect-api.onrender.com'}/api/payments/webhook`,
+      notification_url: `${process.env.BACKEND_URL || 'https://jobconnect-i16a.onrender.com'}/api/payments/webhook`,
     };
 
-    const response = await mercadopago.preferences.create(preference);
+    const response = await preference.create({ body: preferenceData });
 
     // Criar registro de pagamento
     await prisma.payment.create({
@@ -117,8 +119,8 @@ exports.createSubscriptionPreference = async (req, res) => {
     });
 
     res.json({
-      preferenceId: response.body.id,
-      initPoint: response.body.init_point,
+      preferenceId: response.id,
+      initPoint: response.init_point,
     });
   } catch (error) {
     console.error('Erro ao criar preferência de assinatura:', error);
@@ -135,10 +137,11 @@ exports.webhook = async (req, res) => {
       const paymentId = data.id;
 
       // Buscar informações do pagamento no Mercado Pago
-      const paymentInfo = await mercadopago.payment.findById(paymentId);
+      const paymentClient = new Payment(client);
+      const paymentInfo = await paymentClient.get({ id: paymentId });
 
-      if (paymentInfo.body.status === 'approved') {
-        const externalReference = paymentInfo.body.external_reference;
+      if (paymentInfo.status === 'approved') {
+        const externalReference = paymentInfo.external_reference;
 
         // Atualizar pagamento no banco
         const payment = await prisma.payment.findFirst({

@@ -7,46 +7,96 @@ import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Briefcase, Users, Plus, TrendingUp, Building2, CreditCard } from 'lucide-react';
+import { Briefcase, Users, Plus, Building2 } from 'lucide-react';
 
 export default function CompanyDashboard() {
   const router = useRouter();
   const { user, isAuthenticated, fetchUser } = useAuthStore();
   const [stats, setStats] = useState<any>(null);
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      fetchUser().then(() => {
+    const initDashboard = async () => {
+      try {
         if (!isAuthenticated) {
-          router.push('/login');
+          await fetchUser();
         }
-      });
-    } else if (user?.type !== 'company') {
-      router.push('/');
-    } else {
-      fetchData();
-    }
-  }, [isAuthenticated, user]);
+        
+        // Aguardar um pouco para garantir que o user foi carregado
+        setTimeout(() => {
+          const currentUser = useAuthStore.getState().user;
+          if (!currentUser) {
+            router.push('/login/company');
+          } else if (currentUser.type !== 'company') {
+            router.push('/');
+          } else {
+            fetchData();
+          }
+        }, 100);
+      } catch (err) {
+        console.error('Erro ao inicializar dashboard:', err);
+        router.push('/login/company');
+      }
+    };
+
+    initDashboard();
+  }, []);
 
   const fetchData = async () => {
     try {
+      setError('');
       const [statsRes, jobsRes] = await Promise.all([
         api.get('/api/companies/stats'),
         api.get('/api/jobs/company/my-jobs'),
       ]);
+      
       setStats(statsRes.data.stats);
-      setJobs(jobsRes.data.jobs);
-    } catch (error) {
+      setJobs(jobsRes.data.jobs || []);
+    } catch (error: any) {
       console.error('Erro ao buscar dados:', error);
+      setError(error.response?.data?.error || 'Erro ao carregar dados do dashboard');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading || !user) {
-    return <div className="max-w-7xl mx-auto px-4 py-8">Carregando...</div>;
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-700">Erro ao Carregar Dashboard</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={fetchData}>Tentar Novamente</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!user || !stats) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <p>Carregando informações do usuário...</p>
+      </div>
+    );
   }
 
   return (
@@ -148,7 +198,7 @@ export default function CompanyDashboard() {
                       <h3 className="font-semibold text-lg">{job.title}</h3>
                       <p className="text-gray-600">{job.location}</p>
                       <div className="flex gap-4 mt-2 text-sm text-gray-500">
-                        <span>{job._count.applications} candidaturas</span>
+                        <span>{job._count?.applications || 0} candidaturas</span>
                         <span>Publicada em {new Date(job.createdAt).toLocaleDateString('pt-BR')}</span>
                       </div>
                     </div>

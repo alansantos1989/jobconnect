@@ -1,166 +1,111 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuthStore } from '@/store/authStore';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-type AccountType = 'user' | 'company' | 'admin';
+import { Building2, User, Shield } from 'lucide-react';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { login } = useAuthStore();
-  
-  const [formData, setFormData] = useState({
-    accountType: 'user' as AccountType,
-    email: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleAccountTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newType = e.target.value as AccountType;
-    console.log('[LOGIN] Tipo de conta selecionado:', newType);
-    setFormData(prev => ({
-      ...prev,
-      accountType: newType
-    }));
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      email: e.target.value
-    }));
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      password: e.target.value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    console.log('[LOGIN] Tentando fazer login com:', {
-      email: formData.email,
-      type: formData.accountType
-    });
-
-    try {
-      await login(formData.email, formData.password, formData.accountType);
-      
-      console.log('[LOGIN] Login bem-sucedido! Redirecionando para:', formData.accountType);
-      
-      // Redirecionar baseado no tipo de usuário
-      if (formData.accountType === 'user') {
-        console.log('[LOGIN] Redirecionando para /candidate/dashboard');
-        router.push('/candidate/dashboard');
-      } else if (formData.accountType === 'company') {
-        console.log('[LOGIN] Redirecionando para /company/dashboard');
-        router.push('/company/dashboard');
-      } else if (formData.accountType === 'admin') {
-        console.log('[LOGIN] Redirecionando para /admin/dashboard');
-        router.push('/admin/dashboard');
-      }
-    } catch (err: any) {
-      console.error('[LOGIN] Erro ao fazer login:', err);
-      setError(err.response?.data?.error || 'Erro ao fazer login');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">Entrar no JobConnect</CardTitle>
-          <CardDescription className="text-center">
-            Entre com sua conta para continuar
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo de conta
-              </label>
-              <select
-                value={formData.accountType}
-                onChange={handleAccountTypeChange}
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-              >
-                <option value="user">Candidato</option>
-                <option value="company">Empresa</option>
-                <option value="admin">Administrador</option>
-              </select>
-            </div>
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <div className="w-full max-w-4xl">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Bem-vindo ao JobConnect</h1>
+          <p className="text-gray-600">Selecione o tipo de conta para fazer login</p>
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={handleEmailChange}
-                required
-                placeholder="seu@email.com"
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-              />
-            </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Candidato */}
+          <Link href="/login/candidate">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-green-500">
+              <CardHeader className="text-center">
+                <div className="mx-auto w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-4">
+                  <User className="h-8 w-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">Candidato</CardTitle>
+                <CardDescription>
+                  Busque vagas e candidate-se
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li>✓ Buscar vagas</li>
+                  <li>✓ Candidatar-se</li>
+                  <li>✓ Acompanhar status</li>
+                  <li>✓ Gerenciar perfil</li>
+                </ul>
+                <div className="mt-4 text-center">
+                  <span className="text-green-600 font-medium">Entrar como Candidato →</span>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Senha
-              </label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={handlePasswordChange}
-                required
-                placeholder="••••••••"
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-              />
-            </div>
+          {/* Empresa */}
+          <Link href="/login/company">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-blue-500">
+              <CardHeader className="text-center">
+                <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4">
+                  <Building2 className="h-8 w-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">Empresa</CardTitle>
+                <CardDescription>
+                  Publique vagas e contrate
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li>✓ Publicar vagas</li>
+                  <li>✓ Gerenciar candidatos</li>
+                  <li>✓ Planos flexíveis</li>
+                  <li>✓ Dashboard completo</li>
+                </ul>
+                <div className="mt-4 text-center">
+                  <span className="text-blue-600 font-medium">Entrar como Empresa →</span>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                {error}
-              </div>
-            )}
+          {/* Administrador */}
+          <Link href="/login/admin">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-purple-500">
+              <CardHeader className="text-center">
+                <div className="mx-auto w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mb-4">
+                  <Shield className="h-8 w-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">Administrador</CardTitle>
+                <CardDescription>
+                  Gerencie a plataforma
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li>✓ Gerenciar usuários</li>
+                  <li>✓ Gerenciar empresas</li>
+                  <li>✓ Moderar vagas</li>
+                  <li>✓ Relatórios</li>
+                </ul>
+                <div className="mt-4 text-center">
+                  <span className="text-purple-600 font-medium">Entrar como Admin →</span>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar'}
-            </Button>
-
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-              <strong>Tipo selecionado:</strong> {
-                formData.accountType === 'user' ? 'Candidato' :
-                formData.accountType === 'company' ? 'Empresa' :
-                'Administrador'
-              }
-            </div>
-          </form>
-
-          <div className="mt-6 text-center text-sm">
-            <p className="text-gray-600">
-              Não tem uma conta?{' '}
-              <Link href="/register/candidate" className="text-blue-600 hover:underline">
-                Cadastre-se
-              </Link>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+        <div className="mt-8 text-center">
+          <p className="text-gray-600">
+            Não tem uma conta?{' '}
+            <Link href="/register/candidate" className="text-blue-600 hover:underline font-medium">
+              Cadastre-se como candidato
+            </Link>
+            {' '}ou{' '}
+            <Link href="/register/company" className="text-blue-600 hover:underline font-medium">
+              cadastre sua empresa
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

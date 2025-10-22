@@ -11,11 +11,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuthStore();
-  
-  // Separar os estados para evitar conflitos
-  const [accountType, setAccountType] = useState<'user' | 'company' | 'admin'>('user');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    type: 'company' as 'user' | 'company' | 'admin',
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -24,17 +24,17 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    console.log('[LOGIN FRONTEND] Dados do formulário:', { email, password, type: accountType });
+    console.log('[LOGIN FRONTEND] Dados do formulário:', formData);
 
     try {
-      await login(email, password, accountType);
+      await login(formData.email, formData.password, formData.type);
       
       // Redirecionar baseado no tipo de usuário
-      if (accountType === 'user') {
+      if (formData.type === 'user') {
         router.push('/candidate/dashboard');
-      } else if (accountType === 'company') {
+      } else if (formData.type === 'company') {
         router.push('/company/dashboard');
-      } else if (accountType === 'admin') {
+      } else if (formData.type === 'admin') {
         router.push('/admin/dashboard');
       }
     } catch (err: any) {
@@ -60,11 +60,11 @@ export default function LoginPage() {
                 Tipo de conta
               </label>
               <select
-                value={accountType}
+                value={formData.type}
                 onChange={(e) => {
                   const newType = e.target.value as 'user' | 'company' | 'admin';
                   console.log('[LOGIN] Tipo de conta alterado para:', newType);
-                  setAccountType(newType);
+                  setFormData({ ...formData, type: newType });
                 }}
                 className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
               >
@@ -80,8 +80,8 @@ export default function LoginPage() {
               </label>
               <Input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
                 placeholder="seu@email.com"
               />
@@ -93,8 +93,8 @@ export default function LoginPage() {
               </label>
               <Input
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
                 placeholder="••••••••"
               />

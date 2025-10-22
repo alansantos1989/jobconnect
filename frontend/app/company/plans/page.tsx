@@ -1,138 +1,172 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Zap } from 'lucide-react';
+import { Check, X, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+
+const plans = [
+  {
+    id: 'FREE',
+    name: 'Plano Gratuito',
+    price: 0,
+    period: 'para sempre',
+    description: 'Ideal para testar a plataforma',
+    features: [
+      { text: '1 vaga ativa por vez', included: true },
+      { text: 'Até 10 candidaturas por vaga', included: true },
+      { text: 'Perfil básico da empresa', included: true },
+      { text: 'Suporte por email', included: true },
+      { text: 'Destaque nas buscas', included: false },
+      { text: 'Vagas ilimitadas', included: false },
+      { text: 'Análise de candidatos', included: false },
+      { text: 'Suporte prioritário', included: false },
+    ],
+  },
+  {
+    id: 'PRO',
+    name: 'Plano Profissional',
+    price: 99.90,
+    period: 'por mês',
+    description: 'Para empresas que querem crescer',
+    features: [
+      { text: 'Vagas ilimitadas', included: true },
+      { text: 'Candidaturas ilimitadas', included: true },
+      { text: 'Perfil completo da empresa', included: true },
+      { text: 'Destaque nas buscas', included: true },
+      { text: 'Análise de candidatos com IA', included: true },
+      { text: 'Relatórios e estatísticas', included: true },
+      { text: 'Suporte prioritário', included: true },
+      { text: 'Logo em destaque', included: true },
+    ],
+    popular: true,
+  },
+];
 
 export default function PlansPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isAuthenticated || user?.type !== 'company') {
-      router.push('/login');
+  const handleSelectPlan = async (planId: string) => {
+    if (planId === 'FREE') {
+      alert('Você já está no plano gratuito!');
+      return;
     }
-  }, [isAuthenticated, user]);
 
-  const handleUpgrade = async () => {
-    setLoading(true);
+    setLoading(planId);
+
     try {
-      const response = await api.post('/api/payments/create-subscription-preference');
-      window.location.href = response.data.initPoint;
+      const response = await api.post('/api/payments/create-subscription', {
+        planType: planId,
+      });
+
+      if (response.data.paymentUrl) {
+        window.location.href = response.data.paymentUrl;
+      } else {
+        alert('Erro ao gerar link de pagamento');
+      }
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Erro ao criar pagamento');
-      setLoading(false);
+      console.error('Erro ao criar assinatura:', error);
+      alert(error.response?.data?.error || 'Erro ao processar pagamento');
+    } finally {
+      setLoading(null);
     }
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-6">
+        <Link href="/company/dashboard">
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+        </Link>
+      </div>
+
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Escolha seu Plano</h1>
-        <p className="text-lg text-gray-600">
-          Publique vagas e encontre os melhores talentos
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          Escolha o Plano Ideal para Sua Empresa
+        </h1>
+        <p className="text-xl text-gray-600">
+          Encontre talentos incríveis e faça sua empresa crescer
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        {/* Plano FREE */}
-        <Card className={user?.planType === 'FREE' ? 'border-blue-500 border-2' : ''}>
-          <CardHeader>
-            <CardTitle className="text-2xl">Plano FREE</CardTitle>
-            <CardDescription>Para começar</CardDescription>
-            <div className="mt-4">
-              <span className="text-4xl font-bold">R$ 0</span>
-              <span className="text-gray-600">/mês</span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3 mb-6">
-              <li className="flex items-center">
-                <Check className="h-5 w-5 text-green-600 mr-2" />
-                <span>1 vaga ativa por vez</span>
-              </li>
-              <li className="flex items-center">
-                <Check className="h-5 w-5 text-green-600 mr-2" />
-                <span>Acesso a candidatos</span>
-              </li>
-              <li className="flex items-center">
-                <Check className="h-5 w-5 text-green-600 mr-2" />
-                <span>Dashboard básico</span>
-              </li>
-            </ul>
-            {user?.planType === 'FREE' ? (
-              <Button disabled className="w-full">
-                Plano Atual
-              </Button>
-            ) : (
-              <Button variant="outline" className="w-full" disabled>
-                Fazer Downgrade
-              </Button>
+      <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        {plans.map((plan) => (
+          <Card
+            key={plan.id}
+            className={`relative ${
+              plan.popular ? 'border-blue-500 border-2 shadow-xl' : ''
+            }`}
+          >
+            {plan.popular && (
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                  Mais Popular
+                </span>
+              </div>
             )}
-          </CardContent>
-        </Card>
 
-        {/* Plano PRO */}
-        <Card className={user?.planType === 'PRO' ? 'border-blue-500 border-2' : 'border-blue-300'}>
-          <CardHeader>
-            <div className="flex items-center justify-between mb-2">
-              <CardTitle className="text-2xl">Plano PRO</CardTitle>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                <Zap className="h-3 w-3 mr-1" />
-                Popular
-              </span>
-            </div>
-            <CardDescription>Para empresas em crescimento</CardDescription>
-            <div className="mt-4">
-              <span className="text-4xl font-bold">R$ 99,90</span>
-              <span className="text-gray-600">/mês</span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3 mb-6">
-              <li className="flex items-center">
-                <Check className="h-5 w-5 text-green-600 mr-2" />
-                <span className="font-semibold">Vagas ilimitadas</span>
-              </li>
-              <li className="flex items-center">
-                <Check className="h-5 w-5 text-green-600 mr-2" />
-                <span>Destaque nas vagas</span>
-              </li>
-              <li className="flex items-center">
-                <Check className="h-5 w-5 text-green-600 mr-2" />
-                <span>Dashboard completo</span>
-              </li>
-              <li className="flex items-center">
-                <Check className="h-5 w-5 text-green-600 mr-2" />
-                <span>Suporte prioritário</span>
-              </li>
-              <li className="flex items-center">
-                <Check className="h-5 w-5 text-green-600 mr-2" />
-                <span>Análise de candidatos</span>
-              </li>
-            </ul>
-            {user?.planType === 'PRO' ? (
-              <Button disabled className="w-full">
-                Plano Atual
+            <CardHeader>
+              <CardTitle className="text-2xl">{plan.name}</CardTitle>
+              <CardDescription>{plan.description}</CardDescription>
+              <div className="mt-4">
+                <span className="text-4xl font-bold">
+                  R$ {plan.price.toFixed(2).replace('.', ',')}
+                </span>
+                <span className="text-gray-600 ml-2">{plan.period}</span>
+              </div>
+            </CardHeader>
+
+            <CardContent>
+              <ul className="space-y-3 mb-6">
+                {plan.features.map((feature, index) => (
+                  <li key={index} className="flex items-start">
+                    {feature.included ? (
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <X className="h-5 w-5 text-gray-300 mr-2 flex-shrink-0 mt-0.5" />
+                    )}
+                    <span
+                      className={
+                        feature.included ? 'text-gray-900' : 'text-gray-400'
+                      }
+                    >
+                      {feature.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                onClick={() => handleSelectPlan(plan.id)}
+                disabled={loading === plan.id}
+                className={`w-full ${
+                  plan.popular
+                    ? 'bg-blue-600 hover:bg-blue-700'
+                    : 'bg-gray-600 hover:bg-gray-700'
+                }`}
+              >
+                {loading === plan.id
+                  ? 'Processando...'
+                  : plan.id === 'FREE'
+                  ? 'Plano Atual'
+                  : 'Assinar Agora'}
               </Button>
-            ) : (
-              <Button onClick={handleUpgrade} disabled={loading} className="w-full">
-                {loading ? 'Processando...' : 'Fazer Upgrade'}
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <div className="mt-12 text-center">
-        <p className="text-sm text-gray-600">
-          Pagamento seguro via Mercado Pago • Cancele quando quiser
-        </p>
+      <div className="mt-12 text-center text-gray-600">
+        <p className="mb-2">💳 Pagamento seguro via Mercado Pago</p>
+        <p className="mb-2">🔒 Cancele quando quiser, sem multas</p>
+        <p>✅ Garantia de 7 dias - devolução total do valor</p>
       </div>
     </div>
   );

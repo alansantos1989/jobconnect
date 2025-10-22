@@ -36,13 +36,13 @@ export default function NewJobPage() {
       
       // Se for erro de limite de plano, redirecionar para página de planos
       if (errorMessage.includes('Limite de vagas atingido')) {
-        if (confirm(errorMessage + '\n\nDeseja ver os planos disponíveis?')) {
+        alert(errorMessage + '\n\nVocê será redirecionado para a página de planos.');
+        setTimeout(() => {
           router.push('/company/plans');
-          return;
-        }
-      } else {
-        alert(errorMessage);
+        }, 1000);
+        return;
       }
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }

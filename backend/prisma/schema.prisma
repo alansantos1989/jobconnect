@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String
+  name         String
+  phone        String?
+  profilePhoto String?
+  resumePdf    String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  resume       Resume?
+  applications Application[]
+
+  @@map("users")
+}
+
+model Resume {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  objective  String?
+  experience String?  @db.Text
+  education  String?  @db.Text
+  skills     String?  @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("resumes")
+}
+
+model Company {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  password           String
+  name               String
+  cnpj               String    @unique
+  description        String?   @db.Text
+  logo               String?
+  website            String?
+  planType           PlanType  @default(FREE)
+  subscriptionStatus String?
+  subscriptionId     String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  jobs               Job[]
+  payments           Payment[]
+
+  @@map("companies")
+}
+
+model Job {
+  id           String        @id @default(uuid())
+  companyId    String
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title        String
+  description  String        @db.Text
+  requirements String?       @db.Text
+  location     String
+  remote       Boolean       @default(false)
+  salary       String?
+  status       JobStatus     @default(ACTIVE)
+  featured     Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+  payment      Payment?
+
+  @@map("jobs")
+}
+
+model Application {
+  id        String            @id @default(uuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String
+  job       Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status    ApplicationStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@unique([userId, jobId])
+  @@map("applications")
+}
+
+model Payment {
+  id        String      @id @default(uuid())
+  companyId String
+  company   Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  jobId     String?     @unique
+  job       Job?        @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  amount    Float
+  status    String
+  paymentId String?     @unique
+  type      PaymentType
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("payments")
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("SUPER_ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+enum PlanType {
+  FREE
+  PRO
+}
+
+enum JobStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
+enum PaymentType {
+  JOB_POST
+  SUBSCRIPTION
+}
+

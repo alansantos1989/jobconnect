@@ -59,12 +59,12 @@ export default function PlansPage() {
     setLoading(planId);
 
     try {
-      const response = await api.post('/api/payments/create-subscription', {
+      const response = await api.post('/api/payments/create-subscription-preference', {
         planType: planId,
       });
 
-      if (response.data.paymentUrl) {
-        window.location.href = response.data.paymentUrl;
+      if (response.data.initPoint) {
+        window.location.href = response.data.initPoint;
       } else {
         alert('Erro ao gerar link de pagamento');
       }

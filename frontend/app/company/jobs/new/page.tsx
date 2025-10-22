@@ -32,7 +32,17 @@ export default function NewJobPage() {
       router.push('/company/dashboard');
     } catch (error: any) {
       console.error('Erro ao criar vaga:', error);
-      alert(error.response?.data?.error || 'Erro ao criar vaga');
+      const errorMessage = error.response?.data?.error || 'Erro ao criar vaga';
+      
+      // Se for erro de limite de plano, redirecionar para página de planos
+      if (errorMessage.includes('Limite de vagas atingido')) {
+        if (confirm(errorMessage + '\n\nDeseja ver os planos disponíveis?')) {
+          router.push('/company/plans');
+          return;
+        }
+      } else {
+        alert(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

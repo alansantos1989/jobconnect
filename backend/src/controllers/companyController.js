@@ -104,34 +104,65 @@ exports.uploadLogo = async (req, res) => {
   }
 };
 
-// Obter estatísticas da empresa
+// Obter estatísticas da empresa com retry automático
 exports.getStats = async (req, res) => {
   try {
     const companyId = req.userId;
+    
+    console.log('[STATS] Buscando estatísticas para empresa:', companyId);
+
+    // Buscar dados com timeout e retry
+    const fetchWithRetry = async (fn, retries = 3) => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          return await Promise.race([
+            fn(),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Timeout')), 5000)
+            )
+          ]);
+        } catch (error) {
+          console.log(`[STATS] Tentativa ${i + 1}/${retries} falhou:`, error.message);
+          if (i === retries - 1) throw error;
+          await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        }
+      }
+    };
 
     const [activeJobs, totalApplications, company] = await Promise.all([
-      prisma.job.count({
+      fetchWithRetry(() => prisma.job.count({
         where: {
           companyId,
           status: 'ACTIVE',
         },
-      }),
-      prisma.application.count({
+      })),
+      fetchWithRetry(() => prisma.application.count({
         where: {
           job: {
             companyId,
           },
         },
-      }),
-      prisma.company.findUnique({
+      })),
+      fetchWithRetry(() => prisma.company.findUnique({
         where: { id: companyId },
         select: {
           planType: true,
         },
-      }),
+      })),
     ]);
 
+    if (!company) {
+      return res.status(404).json({ error: 'Empresa não encontrada' });
+    }
+
     const maxJobs = company.planType === 'FREE' ? 1 : 10;
+
+    console.log('[STATS] Estatísticas obtidas com sucesso:', {
+      activeJobs,
+      maxJobs,
+      totalApplications,
+      planType: company.planType,
+    });
 
     res.json({
       stats: {
@@ -143,7 +174,10 @@ exports.getStats = async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao buscar estatísticas:', error);
-    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+    res.status(500).json({ 
+      error: 'Erro ao buscar estatísticas',
+      details: error.message 
+    });
   }
 };
 

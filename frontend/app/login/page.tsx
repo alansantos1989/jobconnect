@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    type: 'user' as 'user' | 'company' | 'admin',
+    type: 'company' as 'user' | 'company' | 'admin',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

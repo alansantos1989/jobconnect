@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    type: 'user',
+    type: 'user' as 'user' | 'company' | 'admin',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,6 +23,8 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    console.log('[LOGIN FRONTEND] Dados do formulário:', formData);
 
     try {
       await login(formData.email, formData.password, formData.type);

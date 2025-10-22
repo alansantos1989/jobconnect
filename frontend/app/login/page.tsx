@@ -61,7 +61,11 @@ export default function LoginPage() {
               </label>
               <select
                 value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value as 'user' | 'company' | 'admin' })}
+                onChange={(e) => {
+                  const newType = e.target.value as 'user' | 'company' | 'admin';
+                  console.log('[LOGIN] Tipo de conta alterado para:', newType);
+                  setFormData({ ...formData, type: newType });
+                }}
                 className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
               >
                 <option value="user">Candidato</option>

@@ -1,19 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuthStore();
   
-  // Separar os estados para evitar conflitos
-  const [accountType, setAccountType] = useState<'user' | 'company' | 'admin'>('user');
+  // Usar ref para manter o valor do tipo de conta sem causar re-renders
+  const accountTypeRef = useRef<'user' | 'company' | 'admin'>('user');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -24,6 +23,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
+    const accountType = accountTypeRef.current;
     console.log('[LOGIN FRONTEND] Dados do formulário:', { email, password, type: accountType });
 
     try {
@@ -60,11 +60,11 @@ export default function LoginPage() {
                 Tipo de conta
               </label>
               <select
-                value={accountType}
+                defaultValue="user"
                 onChange={(e) => {
                   const newType = e.target.value as 'user' | 'company' | 'admin';
                   console.log('[LOGIN] Tipo de conta alterado para:', newType);
-                  setAccountType(newType);
+                  accountTypeRef.current = newType;
                 }}
                 className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
               >
@@ -78,12 +78,13 @@ export default function LoginPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email
               </label>
-              <Input
+              <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="seu@email.com"
+                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
               />
             </div>
 
@@ -91,12 +92,13 @@ export default function LoginPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Senha
               </label>
-              <Input
+              <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
+                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
               />
             </div>
 

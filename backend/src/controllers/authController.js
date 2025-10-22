@@ -110,6 +110,7 @@ exports.registerCompany = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password, type } = req.body;
+    console.log('[LOGIN] Tentativa de login:', { email, type });
 
     let user;
     let userType;
@@ -129,12 +130,17 @@ exports.login = async (req, res) => {
     }
 
     if (!user) {
+      console.log('[LOGIN] Usuário não encontrado:', email);
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
+    console.log('[LOGIN] Usuário encontrado:', { id: user.id, email: user.email });
 
     // Verificar senha
+    console.log('[LOGIN] Verificando senha...');
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log('[LOGIN] Senha válida?', isPasswordValid);
     if (!isPasswordValid) {
+      console.log('[LOGIN] Senha inválida para:', email);
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 

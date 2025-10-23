@@ -29,15 +29,29 @@ export default function RegisterCompanyPage() {
 
     try {
       console.log('[REGISTER] Iniciando registro de empresa...');
+      
+      // Chamar a função register do authStore
       await register(formData, 'company');
       console.log('[REGISTER] Registro concluído com sucesso!');
-      console.log('[REGISTER] Redirecionando para /company/dashboard...');
-      window.location.href = '/company/dashboard';
-      console.log('[REGISTER] Redirecionamento executado');
+      
+      // Aguardar um pouco para garantir que o authStore foi atualizado
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Verificar se está autenticado
+      const isAuth = useAuthStore.getState().isAuthenticated;
+      const user = useAuthStore.getState().user;
+      console.log('[REGISTER] Estado de autenticação:', isAuth, user);
+      
+      if (isAuth && user) {
+        console.log('[REGISTER] Redirecionando para /company/dashboard...');
+        // Forçar recarregamento completo da página
+        window.location.href = '/company/dashboard';
+      } else {
+        throw new Error('Falha na autenticação após registro');
+      }
     } catch (err: any) {
       console.error('[REGISTER] Erro ao registrar:', err);
-      setError(err.response?.data?.error || 'Erro ao criar conta');
-    } finally {
+      setError(err.response?.data?.error || err.message || 'Erro ao criar conta');
       setLoading(false);
     }
   };

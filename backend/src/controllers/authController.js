@@ -42,7 +42,9 @@ exports.registerUser = async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        type: 'user',
       },
+      token: token, // Retornar token no body também
     });
   } catch (error) {
     console.error('Erro ao registrar usuário:', error);
@@ -99,7 +101,9 @@ exports.registerCompany = async (req, res) => {
         id: company.id,
         email: company.email,
         name: company.name,
+        type: 'company',
       },
+      token: token, // Retornar token no body também
     });
   } catch (error) {
     console.error('Erro ao registrar empresa:', error);

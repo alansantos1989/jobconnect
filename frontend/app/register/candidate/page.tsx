@@ -26,9 +26,14 @@ export default function RegisterCandidatePage() {
     setLoading(true);
 
     try {
+      console.log('[REGISTER] Iniciando registro de candidato...');
       await register(formData, 'user');
+      console.log('[REGISTER] Registro concluído com sucesso!');
+      console.log('[REGISTER] Redirecionando para /candidate/dashboard...');
       router.push('/candidate/dashboard');
+      console.log('[REGISTER] router.push executado');
     } catch (err: any) {
+      console.error('[REGISTER] Erro ao registrar:', err);
       setError(err.response?.data?.error || 'Erro ao criar conta');
     } finally {
       setLoading(false);

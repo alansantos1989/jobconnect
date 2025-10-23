@@ -28,9 +28,14 @@ export default function RegisterCompanyPage() {
     setLoading(true);
 
     try {
+      console.log('[REGISTER] Iniciando registro de empresa...');
       await register(formData, 'company');
+      console.log('[REGISTER] Registro concluído com sucesso!');
+      console.log('[REGISTER] Redirecionando para /company/dashboard...');
       router.push('/company/dashboard');
+      console.log('[REGISTER] router.push executado');
     } catch (err: any) {
+      console.error('[REGISTER] Erro ao registrar:', err);
       setError(err.response?.data?.error || 'Erro ao criar conta');
     } finally {
       setLoading(false);

@@ -32,8 +32,8 @@ export default function RegisterCompanyPage() {
       await register(formData, 'company');
       console.log('[REGISTER] Registro concluído com sucesso!');
       console.log('[REGISTER] Redirecionando para /company/dashboard...');
-      router.push('/company/dashboard');
-      console.log('[REGISTER] router.push executado');
+      window.location.href = '/company/dashboard';
+      console.log('[REGISTER] Redirecionamento executado');
     } catch (err: any) {
       console.error('[REGISTER] Erro ao registrar:', err);
       setError(err.response?.data?.error || 'Erro ao criar conta');

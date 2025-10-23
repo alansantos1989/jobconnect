@@ -30,8 +30,8 @@ export default function RegisterCandidatePage() {
       await register(formData, 'user');
       console.log('[REGISTER] Registro concluído com sucesso!');
       console.log('[REGISTER] Redirecionando para /candidate/dashboard...');
-      router.push('/candidate/dashboard');
-      console.log('[REGISTER] router.push executado');
+      window.location.href = '/candidate/dashboard';
+      console.log('[REGISTER] Redirecionamento executado');
     } catch (err: any) {
       console.error('[REGISTER] Erro ao registrar:', err);
       setError(err.response?.data?.error || 'Erro ao criar conta');

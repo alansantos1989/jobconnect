@@ -156,11 +156,9 @@ export default function CompanyProfilePage() {
               </div>
               <div className="flex-1">
                 <label htmlFor="logo-upload" className="cursor-pointer">
-                  <Button type="button" variant="outline" asChild>
-                    <span>
-                      <Upload className="mr-2 h-4 w-4" />
-                      {logoPreview ? 'Alterar Logo' : 'Enviar Logo'}
-                    </span>
+                  <Button type="button" variant="outline">
+                    <Upload className="mr-2 h-4 w-4" />
+                    {logoPreview ? 'Alterar Logo' : 'Enviar Logo'}
                   </Button>
                 </label>
                 <input

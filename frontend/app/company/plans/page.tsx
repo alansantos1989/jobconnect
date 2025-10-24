@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,10 +49,33 @@ const plans = [
 export default function PlansPage() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<string>('FREE');
+  const [loadingPlan, setLoadingPlan] = useState(true);
+
+  useEffect(() => {
+    fetchCurrentPlan();
+  }, []);
+
+  const fetchCurrentPlan = async () => {
+    try {
+      const response = await api.get('/api/companies/stats');
+      setCurrentPlan(response.data.stats.planType || 'FREE');
+    } catch (error) {
+      console.error('Erro ao buscar plano atual:', error);
+      setCurrentPlan('FREE');
+    } finally {
+      setLoadingPlan(false);
+    }
+  };
 
   const handleSelectPlan = async (planId: string) => {
+    if (planId === currentPlan) {
+      alert('Você já está neste plano!');
+      return;
+    }
+
     if (planId === 'FREE') {
-      alert('Você já está no plano gratuito!');
+      alert('Entre em contato com o suporte para fazer downgrade do plano.');
       return;
     }
 
@@ -75,6 +98,16 @@ export default function PlansPage() {
       setLoading(null);
     }
   };
+
+  if (loadingPlan) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center">
+          <p className="text-gray-600">Carregando planos...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -101,8 +134,8 @@ export default function PlansPage() {
           <Card
             key={plan.id}
             className={`relative ${
-              plan.popular ? 'border-blue-500 border-2 shadow-xl' : ''
-            }`}
+              plan.popular ? 'border-blue-500 border-2 shadow-lg' : ''
+            } ${currentPlan === plan.id ? 'ring-2 ring-green-500' : ''}`}
           >
             {plan.popular && (
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -111,7 +144,13 @@ export default function PlansPage() {
                 </span>
               </div>
             )}
-
+            {currentPlan === plan.id && (
+              <div className="absolute -top-4 right-4">
+                <span className="bg-green-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                  Plano Atual
+                </span>
+              </div>
+            )}
             <CardHeader>
               <CardTitle className="text-2xl">{plan.name}</CardTitle>
               <CardDescription>{plan.description}</CardDescription>
@@ -122,7 +161,6 @@ export default function PlansPage() {
                 <span className="text-gray-600 ml-2">{plan.period}</span>
               </div>
             </CardHeader>
-
             <CardContent>
               <ul className="space-y-3 mb-6">
                 {plan.features.map((feature, index) => (
@@ -132,40 +170,34 @@ export default function PlansPage() {
                     ) : (
                       <X className="h-5 w-5 text-gray-300 mr-2 flex-shrink-0 mt-0.5" />
                     )}
-                    <span
-                      className={
-                        feature.included ? 'text-gray-900' : 'text-gray-400'
-                      }
-                    >
+                    <span className={feature.included ? 'text-gray-900' : 'text-gray-400'}>
                       {feature.text}
                     </span>
                   </li>
                 ))}
               </ul>
-
               <Button
                 onClick={() => handleSelectPlan(plan.id)}
-                disabled={loading === plan.id}
-                className={`w-full ${
-                  plan.popular
-                    ? 'bg-blue-600 hover:bg-blue-700'
-                    : 'bg-gray-600 hover:bg-gray-700'
-                }`}
+                disabled={loading !== null || currentPlan === plan.id}
+                className="w-full"
+                variant={currentPlan === plan.id ? 'outline' : 'default'}
               >
-                {loading === plan.id
-                  ? 'Processando...'
-                  : plan.id === 'FREE'
-                  ? 'Plano Atual'
-                  : 'Assinar Agora'}
+                {loading === plan.id ? (
+                  'Processando...'
+                ) : currentPlan === plan.id ? (
+                  'Plano Atual'
+                ) : (
+                  'Assinar Agora'
+                )}
               </Button>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="mt-12 text-center text-gray-600">
-        <p className="mb-2">💳 Pagamento seguro via Mercado Pago</p>
-        <p className="mb-2">🔒 Cancele quando quiser, sem multas</p>
+      <div className="mt-12 text-center text-gray-600 space-y-2">
+        <p>💳 Pagamento seguro via Mercado Pago</p>
+        <p>🔒 Cancele quando quiser, sem multas</p>
         <p>✅ Garantia de 7 dias - devolução total do valor</p>
       </div>
     </div>

@@ -67,6 +67,8 @@ model Job {
   location     String
   remote       Boolean       @default(false)
   salary       String?
+  benefits     String?       @db.Text
+  externalUrl  String?
   status       JobStatus     @default(ACTIVE)
   featured     Boolean       @default(false)
   createdAt    DateTime      @default(now())

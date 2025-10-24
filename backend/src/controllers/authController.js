@@ -56,7 +56,7 @@ exports.registerUser = async (req, res) => {
 // Registro de empresa
 exports.registerCompany = async (req, res) => {
   try {
-    const { email, password, name, cnpj, description, website } = req.body;
+    const { email, password, name, cnpj, description, website, planType } = req.body;
 
     // Verificar se email já existe
     const existingCompany = await prisma.company.findUnique({ where: { email } });
@@ -82,6 +82,7 @@ exports.registerCompany = async (req, res) => {
         cnpj,
         description,
         website,
+        planType: planType || 'FREE',
       },
     });
 

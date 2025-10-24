@@ -12,6 +12,10 @@ router.get('/payments', authMiddleware('admin'), adminController.getPayments);
 router.delete('/users/:id', authMiddleware('admin'), adminController.deleteUser);
 router.delete('/companies/:id', authMiddleware('admin'), adminController.deleteCompany);
 router.delete('/jobs/:id', authMiddleware('admin'), adminController.deleteJob);
+router.patch('/jobs/:id/status', authMiddleware('admin'), adminController.updateJobStatus);
+router.patch('/companies/:id/plan', authMiddleware('admin'), adminController.updateCompanyPlan);
+router.post('/jobs', authMiddleware('admin'), adminController.createJob);
+router.post('/jobs/bulk', authMiddleware('admin'), adminController.createJobsBulk);
 
 module.exports = router;
 

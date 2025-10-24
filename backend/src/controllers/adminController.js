@@ -274,3 +274,188 @@ exports.deleteJob = async (req, res) => {
   }
 };
 
+
+
+// Atualizar status da vaga
+exports.updateJobStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const job = await prisma.job.update({
+      where: { id },
+      data: { status }
+    });
+
+    res.json({ message: 'Status atualizado com sucesso', job });
+  } catch (error) {
+    console.error('Erro ao atualizar status:', error);
+    res.status(500).json({ error: 'Erro ao atualizar status' });
+  }
+};
+
+// Atualizar plano da empresa
+exports.updateCompanyPlan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { planType } = req.body;
+
+    const company = await prisma.company.update({
+      where: { id },
+      data: { planType }
+    });
+
+    res.json({ message: 'Plano atualizado com sucesso', company });
+  } catch (error) {
+    console.error('Erro ao atualizar plano:', error);
+    res.status(500).json({ error: 'Erro ao atualizar plano' });
+  }
+};
+
+
+
+// Criar vaga como administrador
+exports.createJob = async (req, res) => {
+  try {
+    const {
+      companyId,
+      title,
+      description,
+      requirements,
+      location,
+      remote,
+      salary,
+      benefits,
+      externalUrl
+    } = req.body;
+
+    // Validar campos obrigatórios
+    if (!companyId || !title || !description || !location) {
+      return res.status(400).json({ error: 'Campos obrigatórios faltando' });
+    }
+
+    // Verificar se a empresa existe
+    const company = await prisma.company.findUnique({
+      where: { id: companyId }
+    });
+
+    if (!company) {
+      return res.status(404).json({ error: 'Empresa não encontrada' });
+    }
+
+    // Criar vaga
+    const job = await prisma.job.create({
+      data: {
+        companyId,
+        title,
+        description,
+        requirements: requirements || null,
+        location,
+        remote: remote || false,
+        salary: salary || null,
+        benefits: benefits || null,
+        externalUrl: externalUrl || null,
+        status: 'ACTIVE'
+      },
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({ message: 'Vaga criada com sucesso', job });
+  } catch (error) {
+    console.error('Erro ao criar vaga:', error);
+    res.status(500).json({ error: 'Erro ao criar vaga' });
+  }
+};
+
+// Criar múltiplas vagas em massa
+exports.createJobsBulk = async (req, res) => {
+  try {
+    const { jobs } = req.body;
+
+    if (!Array.isArray(jobs) || jobs.length === 0) {
+      return res.status(400).json({ error: 'Array de vagas inválido' });
+    }
+
+    const results = {
+      success: [],
+      errors: []
+    };
+
+    for (const jobData of jobs) {
+      try {
+        const {
+          companyId,
+          title,
+          description,
+          requirements,
+          location,
+          remote,
+          salary,
+          benefits,
+          externalUrl
+        } = jobData;
+
+        // Validar campos obrigatórios
+        if (!companyId || !title || !description || !location) {
+          results.errors.push({
+            job: jobData,
+            error: 'Campos obrigatórios faltando'
+          });
+          continue;
+        }
+
+        // Verificar se a empresa existe
+        const company = await prisma.company.findUnique({
+          where: { id: companyId }
+        });
+
+        if (!company) {
+          results.errors.push({
+            job: jobData,
+            error: 'Empresa não encontrada'
+          });
+          continue;
+        }
+
+        // Criar vaga
+        const job = await prisma.job.create({
+          data: {
+            companyId,
+            title,
+            description,
+            requirements: requirements || null,
+            location,
+            remote: remote || false,
+            salary: salary || null,
+            benefits: benefits || null,
+            externalUrl: externalUrl || null,
+            status: 'ACTIVE'
+          }
+        });
+
+        results.success.push(job);
+      } catch (error) {
+        results.errors.push({
+          job: jobData,
+          error: error.message
+        });
+      }
+    }
+
+    res.status(201).json({
+      message: `${results.success.length} vagas criadas com sucesso`,
+      results
+    });
+  } catch (error) {
+    console.error('Erro ao criar vagas em massa:', error);
+    res.status(500).json({ error: 'Erro ao criar vagas em massa' });
+  }
+};
+

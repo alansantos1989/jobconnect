@@ -102,8 +102,8 @@ exports.createSubscriptionPreference = async (req, res) => {
         pending: `${process.env.FRONTEND_URL}/company/payment/pending`,
       },
       auto_return: 'approved',
-      external_reference: companyId,
-      notification_url: `${process.env.BACKEND_URL || 'https://jobconnect-i16a.onrender.com'}/api/payments/webhook`,
+      external_reference: `company:${companyId}:plan:PRO`,
+      notification_url: `${process.env.BACKEND_URL || 'https://jobconnect-i16a.onrender.com'}/api/webhooks/mercadopago`,
     };
 
     const response = await preference.create({ body: preferenceData });
@@ -220,6 +220,59 @@ exports.getPaymentHistory = async (req, res) => {
   } catch (error) {
     console.error('Erro ao buscar histórico de pagamentos:', error);
     res.status(500).json({ error: 'Erro ao buscar histórico de pagamentos' });
+  }
+};
+
+
+
+// Cancelar assinatura
+exports.cancelSubscription = async (req, res) => {
+  try {
+    const companyId = req.userId;
+
+    const company = await prisma.company.findUnique({
+      where: { id: companyId },
+    });
+
+    if (!company) {
+      return res.status(404).json({ error: 'Empresa não encontrada' });
+    }
+
+    if (company.planType === 'FREE') {
+      return res.status(400).json({ error: 'Você já está no plano gratuito' });
+    }
+
+    if (!company.subscriptionId) {
+      return res.status(400).json({ error: 'Nenhuma assinatura ativa encontrada' });
+    }
+
+    // Atualizar empresa para plano FREE
+    await prisma.company.update({
+      where: { id: companyId },
+      data: {
+        planType: 'FREE',
+        subscriptionStatus: 'CANCELED',
+        // Manter subscriptionId para histórico
+      },
+    });
+
+    // TODO: Cancelar assinatura no Mercado Pago se for recorrente
+    // const mercadopago = require('mercadopago');
+    // mercadopago.configure({ access_token: process.env.MERCADOPAGO_ACCESS_TOKEN });
+    // await mercadopago.preapproval.update({ id: company.subscriptionId, status: 'cancelled' });
+
+    res.json({
+      message: 'Assinatura cancelada com sucesso',
+      company: {
+        id: company.id,
+        name: company.name,
+        planType: 'FREE',
+        subscriptionStatus: 'CANCELED',
+      },
+    });
+  } catch (error) {
+    console.error('Erro ao cancelar assinatura:', error);
+    res.status(500).json({ error: 'Erro ao cancelar assinatura' });
   }
 };
 

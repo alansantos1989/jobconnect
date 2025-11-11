@@ -200,6 +200,16 @@ export default function PlansPage() {
         <p>🔒 Cancele quando quiser, sem multas</p>
         <p>✅ Garantia de 7 dias - devolução total do valor</p>
       </div>
+
+      {currentPlan !== 'FREE' && (
+        <div className="mt-8 text-center">
+          <Link href="/company/subscription/cancel">
+            <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+              Cancelar Assinatura
+            </Button>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

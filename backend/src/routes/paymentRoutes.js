@@ -7,6 +7,7 @@ const authMiddleware = require('../middlewares/auth');
 router.post('/create-job-preference', authMiddleware('company'), paymentController.createJobPaymentPreference);
 router.post('/create-subscription-preference', authMiddleware('company'), paymentController.createSubscriptionPreference);
 router.get('/history', authMiddleware('company'), paymentController.getPaymentHistory);
+router.post('/cancel-subscription', authMiddleware('company'), paymentController.cancelSubscription);
 
 // Webhook público (Mercado Pago)
 router.post('/webhook', paymentController.webhook);

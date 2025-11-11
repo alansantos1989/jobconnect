@@ -14,6 +14,10 @@ const resumeRoutes = require('./routes/resumeRoutes');
 const companyRoutes = require('./routes/companyRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const webhookRoutes = require('./routes/webhookRoutes');
+const lgpdRoutes = require('./routes/lgpdRoutes');
+const auditRoutes = require('./routes/auditRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,8 +33,25 @@ const limiter = rateLimit({
 });
 
 // Middlewares
+// Lista de origens permitidas para CORS
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://jobconnect-inky.vercel.app',
+];
+
+// Configuração de CORS dinâmica
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Permitir requisições sem origin (ex: mobile apps, Postman)
+    if (!origin) return callback(null, true);
+    
+    // Verificar se a origin está na lista de permitidas
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json());
@@ -50,6 +71,10 @@ app.use('/api/resumes', resumeRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/webhooks', webhookRoutes);
+app.use('/api/lgpd', lgpdRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Rota de health check
 app.get('/health', (req, res) => {
@@ -70,6 +95,10 @@ app.get('/', (req, res) => {
       companies: '/api/companies',
       payments: '/api/payments',
       admin: '/api/admin',
+      webhooks: '/api/webhooks',
+      lgpd: '/api/lgpd',
+      audit: '/api/audit',
+      analytics: '/api/analytics',
     },
   });
 });

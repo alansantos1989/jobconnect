@@ -8,17 +8,62 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  password     String
-  name         String
-  phone        String?
-  profilePhoto String?
-  resumePdf    String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  resume       Resume?
-  applications Application[]
+  id                  String        @id @default(uuid())
+  email               String        @unique
+  password            String
+  name                String
+  phone               String?
+  profilePhoto        String?
+  resumePdf           String?
+  
+  // Novos campos demográficos e profissionais
+  birthDate           DateTime?
+  gender              String?       // Masculino, Feminino, Outro, Prefiro não informar
+  cpfHash             String?       @unique // CPF criptografado
+  city                String?
+  state               String?
+  zipCode             String?
+  nationality         String?       @default("Brasileira")
+  maritalStatus       String?       // Solteiro, Casado, Divorciado, Viúvo
+  
+  // Formação
+  educationLevel      String?       // Ensino Médio, Técnico, Graduação, Pós-graduação, Mestrado, Doutorado
+  course              String?
+  fieldOfStudy        String?       // Área de formação (TI, Administração, etc)
+  complementaryCourses String?      @db.Text // Lista de cursos complementares
+  certifications      String?       @db.Text // Lista de certificações
+  
+  // Profissional
+  currentProfession   String?
+  desiredPosition     String?
+  skills              String?       @db.Text // Tags separadas por vírgula
+  languages           String?       @db.Text // JSON: [{language: "Inglês", level: "Avançado"}]
+  salaryExpectation   Float?
+  availability        String?       // Imediato, 7 dias, 30 dias
+  contractType        String?       // CLT, PJ, Temporário, Estágio, Freelance
+  unemployedMonths    Int?
+  totalExperience     Int?          // Anos de experiência
+  lastEmployer        String?
+  lastPosition        String?
+  lastEmploymentMonths Int?
+  workPreference      String?       // Remoto, Híbrido, Presencial
+  preferredCities     String?       @db.Text
+  
+  // Processo
+  source              String?       // LinkedIn, InfoJobs, Indicação, Site, etc
+  processStatus       String?       @default("ATIVO") // ATIVO, DESCARTADO, CONTRATADO, POOL
+  recruiterNotes      String?       @db.Text
+  
+  // LGPD
+  lgpdConsent         Boolean       @default(false)
+  lgpdConsentDate     DateTime?
+  
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  
+  resume              Resume?
+  applications        Application[]
+  auditLogs           AuditLog[]
 
   @@map("users")
 }
@@ -38,56 +83,119 @@ model Resume {
 }
 
 model Company {
-  id                 String    @id @default(uuid())
-  email              String    @unique
-  password           String
-  name               String
-  cnpj               String    @unique
-  description        String?   @db.Text
-  logo               String?
-  website            String?
-  planType           PlanType  @default(FREE)
-  subscriptionStatus String?
-  subscriptionId     String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  jobs               Job[]
-  payments           Payment[]
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  password              String
+  name                  String
+  cnpj                  String    @unique
+  description           String?   @db.Text
+  logo                  String?
+  website               String?
+  
+  // Novos campos empresariais
+  cnpjHash              String?   // CNPJ criptografado adicional
+  contactName           String?
+  contactPhone          String?
+  city                  String?
+  state                 String?
+  zipCode               String?
+  businessSector        String?   // TI, Varejo, Indústria, Saúde, etc
+  companySize           String?   // Micro, Pequena, Média, Grande
+  employeeCount         Int?
+  monthlyHiringVolume   Int?
+  preferredContractType String?   // CLT, PJ, Temporário
+  turnoverRate          Float?
+  averageSalary         Float?
+  slaHours              Int?      @default(48) // SLA de atendimento em horas
+  
+  // Contrato e financeiro
+  contractActive        Boolean   @default(true)
+  contractStartDate     DateTime?
+  contractEndDate       DateTime?
+  monthlyRevenue        Float?
+  
+  // Plano e assinatura
+  planType              PlanType  @default(FREE)
+  subscriptionStatus    String?
+  subscriptionId        String?
+  subscriptionStartDate DateTime?
+  subscriptionEndDate   DateTime?
+  
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  jobs                  Job[]
+  payments              Payment[]
+  auditLogs             AuditLog[]
 
   @@map("companies")
 }
 
 model Job {
-  id           String        @id @default(uuid())
-  companyId    String
-  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  title        String
-  description  String        @db.Text
-  requirements String?       @db.Text
-  location     String
-  remote       Boolean       @default(false)
-  salary       String?
-  benefits     String?       @db.Text
-  externalUrl  String?
-  status       JobStatus     @default(ACTIVE)
-  featured     Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  applications Application[]
-  payment      Payment?
+  id                    String        @id @default(uuid())
+  companyId             String
+  company               Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title                 String
+  description           String        @db.Text
+  requirements          String?       @db.Text
+  location              String
+  remote                Boolean       @default(false)
+  salary                String?
+  benefits              String?       @db.Text
+  externalUrl           String?
+  status                JobStatus     @default(ACTIVE)
+  featured              Boolean       @default(false)
+  
+  // Novos campos para métricas
+  department            String?
+  seniority             String?       // Júnior, Pleno, Sênior, Direção
+  contractType          String?       // CLT, PJ, Temporário, Estágio
+  salaryMin             Float?
+  salaryMax             Float?
+  openingDate           DateTime      @default(now())
+  closingDate           DateTime?
+  expectedClosingDate   DateTime?
+  candidatesCount       Int           @default(0)
+  interviewedCount      Int           @default(0)
+  hiredCount            Int           @default(0)
+  timeToFillDays        Int?
+  timeToHireDays        Int?
+  conversionRate        Float?
+  rejectionReasons      String?       @db.Text // JSON com motivos
+  interviewerId         String?
+  
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  
+  applications          Application[]
+  payment               Payment?
+  auditLogs             AuditLog[]
 
   @@map("jobs")
 }
 
 model Application {
-  id        String            @id @default(uuid())
-  userId    String
-  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobId     String
-  job       Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  status    ApplicationStatus @default(PENDING)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  id                String            @id @default(uuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId             String
+  job               Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status            ApplicationStatus @default(PENDING)
+  
+  // Novos campos para processo seletivo
+  appliedAt         DateTime          @default(now())
+  stage             String?           @default("TRIAGEM") // TRIAGEM, ENTREVISTA_TECNICA, ENTREVISTA_CULTURAL, OFERTA
+  technicalScore    Int?              // 0-10
+  culturalScore     Int?              // 0-10
+  interviewDate     DateTime?
+  feedback          String?           @db.Text
+  rejectionReason   String?
+  offerDate         DateTime?
+  hireDate          DateTime?
+  onboardingStatus  String?           // PENDENTE, CONCLUIDO
+  
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   @@unique([userId, jobId])
   @@map("applications")
@@ -110,32 +218,59 @@ model Payment {
 }
 
 model Admin {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String      @id @default(uuid())
+  email     String      @unique
   password  String
   name      String
-  role      String   @default("SUPER_ADMIN")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      String      @default("SUPER_ADMIN")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  auditLogs AuditLog[]
 
   @@map("admins")
+}
+
+// Novo modelo para logs de auditoria
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, EXPORT, etc
+  entityType  String   // USER, COMPANY, JOB, APPLICATION
+  entityId    String
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  companyId   String?
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  adminId     String?
+  admin       Admin?   @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  jobId       String?
+  job         Job?     @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  changes     String?  @db.Text // JSON com as mudanças
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@map("audit_logs")
 }
 
 enum PlanType {
   FREE
   PRO
+  ENTERPRISE
 }
 
 enum JobStatus {
   ACTIVE
   CLOSED
+  PAUSED
 }
 
 enum ApplicationStatus {
   PENDING
   REVIEWED
+  INTERVIEW
   ACCEPTED
   REJECTED
+  WITHDRAWN
 }
 
 enum PaymentType {

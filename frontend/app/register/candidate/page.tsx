@@ -17,6 +17,8 @@ export default function RegisterCandidatePage() {
     password: '',
     phone: '',
   });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -117,13 +119,54 @@ export default function RegisterCandidatePage() {
               />
             </div>
 
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-1 mr-2"
+                  required
+                />
+                <label htmlFor="terms" className="text-sm text-gray-600">
+                  Li e aceito os{' '}
+                  <Link href="/terms" target="_blank" className="text-blue-600 hover:underline">
+                    Termos de Uso
+                  </Link>
+                </label>
+              </div>
+
+              <div className="flex items-start">
+                <input
+                  type="checkbox"
+                  id="privacy"
+                  checked={acceptedPrivacy}
+                  onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                  className="mt-1 mr-2"
+                  required
+                />
+                <label htmlFor="privacy" className="text-sm text-gray-600">
+                  Li e aceito a{' '}
+                  <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">
+                    Política de Privacidade
+                  </Link>
+                  {' '}e autorizo o tratamento dos meus dados pessoais conforme a LGPD
+                </label>
+              </div>
+            </div>
+
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
                 {error}
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading || !acceptedTerms || !acceptedPrivacy}
+            >
               {loading ? 'Criando conta...' : 'Criar conta'}
             </Button>
           </form>

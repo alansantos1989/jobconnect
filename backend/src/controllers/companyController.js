@@ -18,6 +18,26 @@ exports.getProfile = async (req, res) => {
         website: true,
         planType: true,
         subscriptionStatus: true,
+        // Contato
+        contactName: true,
+        contactPhone: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        // Negócio
+        businessSector: true,
+        companySize: true,
+        employeeCount: true,
+        monthlyHiringVolume: true,
+        preferredContractType: true,
+        turnoverRate: true,
+        averageSalary: true,
+        slaHours: true,
+        // Contrato
+        contractActive: true,
+        contractStartDate: true,
+        contractEndDate: true,
+        monthlyRevenue: true,
         createdAt: true,
       },
     });
@@ -26,7 +46,7 @@ exports.getProfile = async (req, res) => {
       return res.status(404).json({ error: 'Empresa não encontrada' });
     }
 
-    res.json({ company });
+    res.json(company);
   } catch (error) {
     console.error('Erro ao buscar perfil:', error);
     res.status(500).json({ error: 'Erro ao buscar perfil' });
@@ -37,17 +57,51 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const companyId = req.userId;
-    const { name, description, website, email, password } = req.body;
+    const {
+      name, description, website, email, password, cnpj,
+      // Contato
+      contactName, contactPhone, city, state, zipCode,
+      // Negócio
+      businessSector, companySize, employeeCount, monthlyHiringVolume,
+      preferredContractType, turnoverRate, averageSalary, slaHours,
+      // Contrato
+      contractActive, contractStartDate, contractEndDate, monthlyRevenue
+    } = req.body;
 
     const data = {};
 
+    // Dados básicos
     if (name) data.name = name;
-    if (description) data.description = description;
-    if (website) data.website = website;
+    if (description !== undefined) data.description = description;
+    if (website !== undefined) data.website = website;
     if (email) data.email = email;
+    if (cnpj) data.cnpj = cnpj;
     if (password) {
       data.password = await bcrypt.hash(password, 10);
     }
+
+    // Contato
+    if (contactName !== undefined) data.contactName = contactName;
+    if (contactPhone !== undefined) data.contactPhone = contactPhone;
+    if (city !== undefined) data.city = city;
+    if (state !== undefined) data.state = state;
+    if (zipCode !== undefined) data.zipCode = zipCode;
+
+    // Negócio
+    if (businessSector !== undefined) data.businessSector = businessSector;
+    if (companySize !== undefined) data.companySize = companySize;
+    if (employeeCount !== undefined) data.employeeCount = employeeCount ? parseInt(employeeCount) : null;
+    if (monthlyHiringVolume !== undefined) data.monthlyHiringVolume = monthlyHiringVolume ? parseInt(monthlyHiringVolume) : null;
+    if (preferredContractType !== undefined) data.preferredContractType = preferredContractType;
+    if (turnoverRate !== undefined) data.turnoverRate = turnoverRate ? parseFloat(turnoverRate) : null;
+    if (averageSalary !== undefined) data.averageSalary = averageSalary ? parseFloat(averageSalary) : null;
+    if (slaHours !== undefined) data.slaHours = slaHours ? parseInt(slaHours) : 48;
+
+    // Contrato
+    if (contractActive !== undefined) data.contractActive = contractActive;
+    if (contractStartDate !== undefined) data.contractStartDate = contractStartDate ? new Date(contractStartDate) : null;
+    if (contractEndDate !== undefined) data.contractEndDate = contractEndDate ? new Date(contractEndDate) : null;
+    if (monthlyRevenue !== undefined) data.monthlyRevenue = monthlyRevenue ? parseFloat(monthlyRevenue) : null;
 
     const company = await prisma.company.update({
       where: { id: companyId },

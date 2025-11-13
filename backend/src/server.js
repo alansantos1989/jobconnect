@@ -18,6 +18,7 @@ const webhookRoutes = require('./routes/webhookRoutes');
 const lgpdRoutes = require('./routes/lgpdRoutes');
 const auditRoutes = require('./routes/auditRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const financeRoutes = require('./routes/financeRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -75,6 +76,7 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/lgpd', lgpdRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/finance', financeRoutes);
 
 // Rota de health check
 app.get('/health', (req, res) => {
@@ -98,6 +100,7 @@ app.get('/', (req, res) => {
       webhooks: '/api/webhooks',
       lgpd: '/api/lgpd',
       audit: '/api/audit',
+      finance: '/api/finance',
       analytics: '/api/analytics',
     },
   });

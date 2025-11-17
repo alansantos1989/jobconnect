@@ -19,6 +19,7 @@ const lgpdRoutes = require('./routes/lgpdRoutes');
 const auditRoutes = require('./routes/auditRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const financeRoutes = require('./routes/financeRoutes');
+const jobImportRoutes = require('./routes/jobImportRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -77,6 +78,7 @@ app.use('/api/lgpd', lgpdRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/finance', financeRoutes);
+app.use('/api/jobs/import', jobImportRoutes);
 
 // Rota de health check
 app.get('/health', (req, res) => {
@@ -101,6 +103,7 @@ app.get('/', (req, res) => {
       lgpd: '/api/lgpd',
       audit: '/api/audit',
       finance: '/api/finance',
+      jobImport: '/api/jobs/import',
       analytics: '/api/analytics',
     },
   });

@@ -109,7 +109,7 @@ export default function CandidateResumePage() {
     formData.append('resume', file);
 
     try {
-      await api.post('/api/users/resume/upload', formData, {
+      await api.post('/api/users/upload-resume', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setSuccess('Currículo em PDF enviado com sucesso!');

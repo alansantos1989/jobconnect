@@ -33,6 +33,13 @@ export default function JobDetailPage() {
   };
 
   const handleApply = async () => {
+    // Se a vaga tem link externo, redirecionar
+    if (job?.externalUrl) {
+      window.open(job.externalUrl, '_blank');
+      return;
+    }
+
+    // Vagas internas requerem autenticação
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -116,7 +123,7 @@ export default function JobDetailPage() {
               size="lg"
               className="w-full md:w-auto"
             >
-              {applied ? 'Candidatura enviada' : applying ? 'Enviando...' : 'Candidatar-se'}
+              {job?.externalUrl ? 'Ver vaga no site' : (applied ? 'Candidatura enviada' : applying ? 'Enviando...' : 'Candidatar-se')}
             </Button>
           </div>
         </CardContent>

@@ -29,6 +29,33 @@ exports.applyToJob = async (req, res) => {
       return res.status(400).json({ error: 'Você já se candidatou a esta vaga' });
     }
 
+    // Buscar dados do candidato
+    const candidate = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        name: true,
+        email: true,
+        phone: true,
+        resumePdf: true,
+      },
+    });
+
+    // Buscar dados completos da vaga e empresa
+    const jobWithCompany = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            logo: true,
+            planType: true,
+          },
+        },
+      },
+    });
+
     // Criar candidatura
     const application = await prisma.application.create({
       data: {
@@ -48,6 +75,22 @@ exports.applyToJob = async (req, res) => {
         },
       },
     });
+
+    // Enviar email para a empresa (apenas se não for vaga externa)
+    if (!job.externalUrl && jobWithCompany.company.email) {
+      try {
+        // TODO: Implementar envio de email real
+        // Por enquanto, apenas log
+        console.log('Email seria enviado para:', jobWithCompany.company.email);
+        console.log('Candidato:', candidate.name, '-', candidate.email);
+        console.log('Vaga:', jobWithCompany.title);
+        console.log('Telefone:', candidate.phone);
+        console.log('Currículo:', candidate.resumePdf);
+      } catch (emailError) {
+        console.error('Erro ao enviar email:', emailError);
+        // Não bloquear a candidatura se o email falhar
+      }
+    }
 
     res.status(201).json({
       message: 'Candidatura enviada com sucesso',

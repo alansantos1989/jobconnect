@@ -77,7 +77,7 @@ exports.applyToJob = async (req, res) => {
     });
 
     // Enviar email para a empresa (apenas se não for vaga externa)
-    if (!job.externalUrl && jobWithCompany.company.email) {
+    if (!jobWithCompany.externalUrl && jobWithCompany.company && jobWithCompany.company.email) {
       try {
         // TODO: Implementar envio de email real
         // Por enquanto, apenas log
